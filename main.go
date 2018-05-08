@@ -41,7 +41,7 @@ func main() {
 	writer := bufio.NewWriter(verFile)
 	writer.WriteString(fmt.Sprintf("package %s\n", packageName))
 	writer.WriteString("\n")
-	writer.WriteString("//go:generate go run vendor/github.com/mandykoh/go-version/main.go\n")
+	writer.WriteString(fmt.Sprintf("//go:generate go run vendor/github.com/mandykoh/go-version/main.go %s\n", packageName))
 	writer.WriteString("\n")
 	writer.WriteString(fmt.Sprintf("const VersionMajor = \"%s\"\n", matches[1]))
 	writer.WriteString(fmt.Sprintf("const VersionMinor = \"%s\"\n", matches[2]))

@@ -19,7 +19,7 @@ func bumpVersion(versionPart string) string {
 }
 
 func main() {
-	const DefaultVersion = "0.0.0"
+	const DefaultVersion = "0.0.1"
 
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "Usage: go-bump <package_name> [semver]\n")
@@ -27,9 +27,10 @@ func main() {
 	}
 	packageName := os.Args[1]
 
-	tagPattern := regexp.MustCompile(`^\s*([^.]+)\.([^.]+)\.(.+)\s*$`)
+	tagPattern := regexp.MustCompile(`^\s*([^.]+)\.([^.]+)\.(\d+).*\s*$`)
 
 	var revString, verMajor, verMinor, verRev string
+	var autoBump = false
 
 	if len(os.Args) > 2 {
 		revString = os.Args[2]
@@ -41,6 +42,7 @@ func main() {
 			revString = DefaultVersion
 		} else {
 			revString = string(rev)
+			autoBump = true
 		}
 	}
 
@@ -50,7 +52,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	verMajor, verMinor, verRev = matches[1], matches[2], bumpVersion(matches[3])
+	verMajor, verMinor, verRev = matches[1], matches[2], matches[3]
+	if autoBump {
+		verRev = bumpVersion(verRev)
+	}
 
 	verFile, err := os.Create("version.go")
 	if err != nil {

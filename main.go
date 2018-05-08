@@ -19,36 +19,38 @@ func bumpVersion(versionPart string) string {
 }
 
 func main() {
+	const DefaultVersion = "0.0.0"
 
-	if len(os.Args) < 3 {
-		fmt.Fprintf(os.Stderr, "Usage: go-version <bump> <package_name>\n")
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "Usage: go-bump <package_name> [semver]\n")
 		os.Exit(1)
 	}
-	bump := os.Args[1]
-	packageName := os.Args[2]
+	packageName := os.Args[1]
 
 	tagPattern := regexp.MustCompile(`^\s*([^.]+)\.([^.]+)\.(.+)\s*$`)
 
-	cmd := exec.Command("git", "describe", "--tags")
-	rev, err := cmd.Output()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		os.Exit(1)
+	var revString, verMajor, verMinor, verRev string
+
+	if len(os.Args) > 2 {
+		revString = os.Args[2]
+
+	} else {
+		cmd := exec.Command("git", "describe", "--tags")
+		rev, err := cmd.Output()
+		if err != nil {
+			revString = DefaultVersion
+		} else {
+			revString = string(rev)
+		}
 	}
 
-	matches := tagPattern.FindStringSubmatch(string(rev))
+	matches := tagPattern.FindStringSubmatch(revString)
 	if matches == nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse revision '%s'\n", string(rev))
+		fmt.Fprintf(os.Stderr, "Unable to parse revision '%s'\n", revString)
 		os.Exit(1)
 	}
 
-	verMajor, verMinor, verRev := matches[1], matches[2], matches[3]
-
-	switch bump {
-	case "major": verMajor, verMinor, verRev = bumpVersion(verMajor), "0", "0"
-	case "minor": verMinor, verRev = bumpVersion(verMinor), "0"
-	default: case "revision": verRev = bumpVersion(verRev)
-	}
+	verMajor, verMinor, verRev = matches[1], matches[2], bumpVersion(matches[3])
 
 	verFile, err := os.Create("version.go")
 	if err != nil {
@@ -60,7 +62,7 @@ func main() {
 	writer := bufio.NewWriter(verFile)
 	writer.WriteString(fmt.Sprintf("package %s\n", packageName))
 	writer.WriteString("\n")
-	writer.WriteString(fmt.Sprintf("//go:generate go run vendor/github.com/mandykoh/go-version/main.go %s\n", packageName))
+	writer.WriteString(fmt.Sprintf("//go:generate go run vendor/github.com/mandykoh/go-bump/main.go %s\n", packageName))
 	writer.WriteString("\n")
 	writer.WriteString(fmt.Sprintf("const VersionMajor = \"%s\"\n", verMajor))
 	writer.WriteString(fmt.Sprintf("const VersionMinor = \"%s\"\n", verMinor))

@@ -67,7 +67,7 @@ func main() {
 	writer := bufio.NewWriter(verFile)
 	writer.WriteString(fmt.Sprintf("package %s\n", packageName))
 	writer.WriteString("\n")
-	writer.WriteString(fmt.Sprintf("//go:generate go run vendor/github.com/mandykoh/go-bump/main.go %s\n", packageName))
+	writer.WriteString(fmt.Sprintf("//go:generate go-bump %s\n", packageName))
 	writer.WriteString("\n")
 	writer.WriteString(fmt.Sprintf("const VersionMajor = \"%s\"\n", verMajor))
 	writer.WriteString(fmt.Sprintf("const VersionMinor = \"%s\"\n", verMinor))
